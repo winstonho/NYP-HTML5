@@ -8,10 +8,9 @@ function Game(stage, imgContainer){
 	this.floorTile = [];
 	this.hiveCheck = [];
 	
-	for( var i = 0; i < 13; i ++){
+	for( var i = 0; i < 7; i ++){
 		this.hiveCheck.push(new Hive(0,0));
 	}
-	console.log("hi");
 	
 	this.tempY = 500;
 	this.tempX = 10;
@@ -29,6 +28,7 @@ function Game(stage, imgContainer){
 		this.tempY  += 60;
 	}
 	this.numberOfColorTileAtStart =   Math.floor(Util.RandomRange(5,15));
+	
 	
 	 for(var i = 0; i < this.numberOfColorTileAtStart; i++){
 		 this.temp =  Math.floor(Util.RandomRange(0,80));
@@ -81,123 +81,109 @@ Game.prototype.restart = function(e) {
 
 Game.prototype.hiveUpdate = function(){
 
+	if(this.aiWhichRow % 2 == 0){
+		this.hiveCheck[1].value_ = this.ai.whichTile_-10;	
+		this.hiveCheck[2].value_ = this.ai.whichTile_-9;	
+		this.hiveCheck[5].value_ = this.ai.whichTile_+8;		
+		this.hiveCheck[6].value_ = this.ai.whichTile_+9;
+	}
+	else{
+		this.hiveCheck[1].value_ = this.ai.whichTile_-9;		
+		this.hiveCheck[2].value_ = this.ai.whichTile_-8;		
+		this.hiveCheck[5].value_ = this.ai.whichTile_+9;		
+		this.hiveCheck[6].value_ = this.ai.whichTile_+10;
+	}
 	this.hiveCheck[0].value_ = this.ai.whichTile_;
-	this.hiveCheck[1].value_ = this.ai.whichTile_-10;
-	this.hiveCheck[2].value_ = this.ai.whichTile_-9;
 	this.hiveCheck[3].value_ = this.ai.whichTile_-1;
 	this.hiveCheck[4].value_ = this.ai.whichTile_+1;
-	this.hiveCheck[5].value_ = this.ai.whichTile_+8;
-	this.hiveCheck[6].value_ = this.ai.whichTile_+9;
-	
-	this.hiveCheck[7].value_ = this.ai.whichTile_-19;
-	this.hiveCheck[8].value_ = this.ai.whichTile_-17;
-	this.hiveCheck[9].value_ = this.ai.whichTile_-2;
-	this.hiveCheck[10].value_ = this.ai.whichTile_+2;
-	this.hiveCheck[11].value_ = this.ai.whichTile_+17;
-	this.hiveCheck[12].value_ = this.ai.whichTile_+19;
-	
-	this.hiveCheck[0].row_ = this.aiWhichRow;
-	this.hiveCheck[1].row_ = this.aiWhichRow-1;
-	this.hiveCheck[2].row_ = this.aiWhichRow-1;
-	this.hiveCheck[3].row_ = this.aiWhichRow;
-	this.hiveCheck[4].row_ = this.aiWhichRow;
-	this.hiveCheck[5].row_ = this.aiWhichRow+1;
-	this.hiveCheck[6].row_ = this.aiWhichRow+1;
-	
-	this.hiveCheck[7].row_ = this.aiWhichRow-2;
-	this.hiveCheck[8].row_ = this.aiWhichRow-2;
-	this.hiveCheck[9].row_ = this.aiWhichRow;
-	this.hiveCheck[10].row_ = this.aiWhichRow;
-	this.hiveCheck[11].row_ = this.aiWhichRow+2;
-	this.hiveCheck[12].row_ = this.aiWhichRow+2;
 };
 
-Game.prototype.topright = function(number, row){
-	if(row < 0 ||  number < 0){
+Game.prototype.topright = function(number, row, decrase){
+	if(row <(0+decrase) ||  number < 0){
 		return false;
 	}
-	if(this.floorTile[number].click){
+	if(this.floorTile[number].click && number != this.hiveCheck[0].value_){
 		return true;
 	}
 	
 	if(row % 2 == 0){
-		return this.topright(number-9, row-1);
+		return this.topright(number-9, row-1, decrase);
 	}else{
-		return this.topright(number-8, row-1);
+		return this.topright(number-8, row-1, decrase);
 	}
 	
 	return false;
 };
 
-Game.prototype.topleft = function(number, row){
-	if(row < 0 ||  number < 0){
+Game.prototype.topleft = function(number, row, decrase){
+	if(row < (0+decrase) ||  number < 0){
 		return false;
 	}
-	if(this.floorTile[number].click){
+	if(this.floorTile[number].click && number != this.hiveCheck[0].value_){
 		return true;
 	}
 	if(row % 2 == 0){
-		return this.topleft(number-10, row-1);
+		return this.topleft(number-10, row-1, decrase);
 	}else{
-		return this.topleft(number-9, row-1);
+		return this.topleft(number-9, row-1, decrase);
 	}
 	
 	return false;
 };
 
-Game.prototype.left = function(number, range){
-	if(number < range){
+Game.prototype.left = function(number, range, decrase){
+	if(number < (range+decrase)){
 		return false;
 	}
-	if(this.floorTile[number].click){		
+	if(this.floorTile[number].click && number != this.hiveCheck[0].value_){		
 		return true;
 	}
 	
-	return this.left(number-1, range);
+	return this.left(number-1, range, decrase);
 
 	return false;
 };
 
-Game.prototype.right = function(number, range){
-	if(number > range){
+Game.prototype.right = function(number, range, decrase){
+	if(number > (range-decrase)){
 		return false;
 	}
-	if(this.floorTile[number].click){	
+	if(this.floorTile[number].click && number != this.hiveCheck[0].value_){	
 		return true;
 	}
 	
-	return this.right(number+1, range);
+	return this.right(number+1, range, decrase);
 	
 	return false;
 };
 
-Game.prototype.botleft = function(number, row){
-	if(row > 8 ||  number > 81){
+Game.prototype.botleft = function(number, row, decrase){
+	if(row > (8-decrase) ||  number > 81){
 		return false;
 	}
-	if(this.floorTile[number].click){	
+	if(this.floorTile[number].click && number != this.hiveCheck[0].value_){	
 		return true;
 	}
 	if(row % 2 == 0){
-		return this.botleft(number+8, row+1);
+		return this.botleft(number+8, row+1, decrase);
 	}else{
-		return this.botleft(number+9, row+1);
+		return this.botleft(number+9, row+1, decrase);
 	}
 	
 	return false;
 };
 
-Game.prototype.botright = function(number, row){
-	if(row > 8 ||  number > 81){
+Game.prototype.botright = function(number, row, decrase){
+	if(row > (8-decrase) ||  number > 81){
 		return false;
 	}
-	if(this.floorTile[number].click){	
+	if(this.floorTile[number].click && number != this.hiveCheck[0].value_){	
 		return true;
 	}
 	if(row % 2 == 0){
-		return this.botright(number+9, row+1);
+		return this.botright(number+9, row+1, decrase);
 	}else{
-		return this.botright(number+10, row+1);
+		return this.botright(number+10, row+1, decrase);
 	}
 	
 	return false;
@@ -205,7 +191,7 @@ Game.prototype.botright = function(number, row){
 
 
 Game.prototype.checkWeiZhu = function(visualplace, visualRow, hiveNum){
-	
+	/*
 	if(this.topleft(visualplace, visualRow)){
 		if(this.topright(visualplace, visualRow)){
 			if(this.left(visualplace, visualRow*9)){
@@ -223,6 +209,7 @@ Game.prototype.checkWeiZhu = function(visualplace, visualRow, hiveNum){
 		return false;
 	}
 	return false;
+	*/
 };
 
 /**
@@ -244,6 +231,46 @@ Game.prototype.onMouseClick = function(e) {
 	
 	this.hiveUpdate();
 	
+	for( var i = 1; i < this.hiveCheck.length; i ++){	
+		if(this.floorTile[this.hiveCheck[i].value_].click){
+			this.hiveCheck[i].alive = false;
+		}else{
+			this.hiveCheck[i].alive = true;
+		}
+	}
+	
+	this.catMove = true;
+	this.lineCheckDecrease = 0;
+	while(this.catMove){
+		if(!this.topleft(this.ai.whichTile_,this.aiWhichRow, this.lineCheckDecrease) && this.hiveCheck[1].alive){
+			this.moveTopLeft();
+			this.catMove = false;
+		}else if(!this.topright(this.ai.whichTile_,this.aiWhichRow, this.lineCheckDecrease) && this.hiveCheck[2].alive){
+			this.moveTopRight();
+			this.catMove = false;
+		}else if(!this.left(this.ai.whichTile_, this.aiWhichRow*9, this.lineCheckDecrease) && this.hiveCheck[3].alive){
+			this.moveLeft();
+			this.catMove = false;
+		}else if(!this.right(this.ai.whichTile_, this.aiWhichRow*9+8, this.lineCheckDecrease)&& this.hiveCheck[4].alive){
+			this.moveRight();	
+			this.catMove = false;
+		}else if(!this.botleft(this.ai.whichTile_, this.aiWhichRow, this.lineCheckDecrease) && this.hiveCheck[5].alive){
+			this.moveBottomLeft();
+			this.catMove = false;
+		}else if(!this.botright(this.ai.whichTile_, this.aiWhichRow, this.lineCheckDecrease) && this.hiveCheck[6].alive){
+			this.moveBottomRight();
+			this.catMove = false;
+		}
+		this.lineCheckDecrease += 1;
+		if(!this.hiveCheck[1].alive && !this.hiveCheck[2].alive && !this.hiveCheck[3].alive &&
+		!this.hiveCheck[4].alive && !this.hiveCheck[5].alive && !this.hiveCheck[6].alive){
+			this.catMove = false;
+			console.log("Dead Cat");
+		}
+	}
+	
+	
+	/*
 	for( var i = 0; i < this.hiveCheck.length; i ++){	
 		if(this.floorTile[this.hiveCheck[i].value_].click){
 			this.hiveCheck[i].alive = false;
@@ -281,93 +308,96 @@ Game.prototype.onMouseClick = function(e) {
 		console.log(this.tempI);
 	}
 	
-	
-	
-
-	/*
-	//left movement
-	if( this.ai.whichTile_ -1 >= this.aiWhichRow*9 &&  !this.floorTile[this.ai.whichTile_ -1].click ){
-		this.ai.x = this.floorTile[this.ai.whichTile_ -1].x;
-		this.ai.whichTile_ = this.ai.whichTile_ -1;
-	}
-	
-	//right movement
-	
-	if( this.ai.whichTile_ + 1 <= this.aiWhichRow*9 + 8 && !this.floorTile[this.ai.whichTile_  + 1].click ){
-		this.ai.x = this.floorTile[this.ai.whichTile_ +1].x;
-		this.ai.whichTile_ = this.ai.whichTile_ +1;
-	}
-	
+	*/
+};
+Game.prototype.moveTopLeft = function(){
 	//topLeft
-
 	if(this.aiWhichRow % 2 == 0){
-		if(  this.ai.whichTile_ -10 > 0 && this.ai.whichTile_  !=  this.aiWhichRow * 9 &&  !this.floorTile[this.ai.whichTile_  - 10 ].click ){
+		if(  this.ai.whichTile_ -10 > 0 && this.ai.whichTile_  !=  this.aiWhichRow * 9 ){
 			this.ai.x = this.floorTile[this.ai.whichTile_ -10].x;
 			this.ai.y = this.floorTile[this.ai.whichTile_ -10].y - this.floorTile[40].getRadius()*2;
 			this.ai.whichTile_ = this.ai.whichTile_ - 10;
 		}
 	}
 	else{
-		if( this.ai.whichTile_ -9 > 0 && !this.floorTile[this.ai.whichTile_ - 9].click ){
+		if( this.ai.whichTile_ -9 > 0 ){
 			this.ai.x = this.floorTile[this.ai.whichTile_ -9].x;
 			this.ai.y = this.floorTile[this.ai.whichTile_ - 9].y - this.floorTile[40].getRadius()*2;
 			this.ai.whichTile_ = this.ai.whichTile_ -9;
 		}
 	}
-	
+};
+
+Game.prototype.moveTopRight = function(){
 	// top right
-	
-	
 	if(this.aiWhichRow % 2 == 0){
-		if(  this.ai.whichTile_ - 9 > 0 &&  !this.floorTile[this.ai.whichTile_  - 9 ].click ){
+		if(  this.ai.whichTile_ - 9 > 0 ){
 			this.ai.x = this.floorTile[this.ai.whichTile_ - 9].x;
 			this.ai.y = this.floorTile[this.ai.whichTile_ - 9].y - this.floorTile[40].getRadius()*2;
 			this.ai.whichTile_ = this.ai.whichTile_ - 9;
 		}
 	}
 	else{
-		if( this.ai.whichTile_ -8 > 0 &&  this.ai.whichTile_  !=  this.aiWhichRow * 9 + 8 && !this.floorTile[this.ai.whichTile_ - 8].click ){
+		if( this.ai.whichTile_ -8 > 0 &&  this.ai.whichTile_  !=  this.aiWhichRow * 9 + 8){
 			this.ai.x = this.floorTile[this.ai.whichTile_ -8].x;
 			this.ai.y = this.floorTile[this.ai.whichTile_ - 8].y - this.floorTile[40].getRadius()*2;
 			this.ai.whichTile_ = this.ai.whichTile_ -8;
 		}
 	}
-	
+};
+
+Game.prototype.moveLeft = function(){
+	//left movement
+	if( this.ai.whichTile_ -1 >= this.aiWhichRow*9 ){
+		this.ai.x = this.floorTile[this.ai.whichTile_ -1].x;
+		this.ai.whichTile_ = this.ai.whichTile_ -1;
+	}
+};
+
+Game.prototype.moveRight = function(){
+	//right movement
+	if( this.ai.whichTile_ + 1 <= this.aiWhichRow*9 + 8 ){
+		this.ai.x = this.floorTile[this.ai.whichTile_ +1].x;
+		this.ai.whichTile_ = this.ai.whichTile_ +1;
+	}
+};
+
+Game.prototype.moveBottomLeft = function(){
 	//left bottom
-	
 	if(this.aiWhichRow % 2 == 0){
-		if(  this.ai.whichTile_ + 8 < 80 && this.ai.whichTile_  !=  this.aiWhichRow * 9 &&  !this.floorTile[this.ai.whichTile_  + 8 ].click ){
+		if(  this.ai.whichTile_ + 8 < 80 && this.ai.whichTile_  !=  this.aiWhichRow * 9 ){
 			this.ai.x = this.floorTile[this.ai.whichTile_ + 8].x;
 			this.ai.y = this.floorTile[this.ai.whichTile_ + 8].y - this.floorTile[40].getRadius()*2;
 			this.ai.whichTile_ = this.ai.whichTile_ +8;
 		}
 	}
 	else{
-		if( this.ai.whichTile_ + 9 < 80 && !this.floorTile[this.ai.whichTile_ + 9].click ){
+		if( this.ai.whichTile_ + 9 < 80 ){
 			this.ai.x = this.floorTile[this.ai.whichTile_  + 9].x;
 			this.ai.y = this.floorTile[this.ai.whichTile_ + 9].y - this.floorTile[40].getRadius()*2;
 			this.ai.whichTile_ = this.ai.whichTile_ +9;
 		}
 	}
-		
-	
+};
+
+Game.prototype.moveBottomRight = function(){
 	//right bottom
 	if(this.aiWhichRow % 2 == 0){
-		if(  this.ai.whichTile_ + 9 < 80 &&  !this.floorTile[this.ai.whichTile_  + 9 ].click ){
+		if(  this.ai.whichTile_ + 9 < 80  ){
 			this.ai.x = this.floorTile[this.ai.whichTile_ + 9].x;
 			this.ai.y = this.floorTile[this.ai.whichTile_ + 9].y - this.floorTile[40].getRadius()*2;
 			this.ai.whichTile_ = this.ai.whichTile_ + 9;
 		}
 	}
 	else{
-		if( this.ai.whichTile_ + 10 < 80 &&  this.ai.whichTile_  !=  this.aiWhichRow * 9 + 8 && !this.floorTile[this.ai.whichTile_ + 10].click ){
+		if( this.ai.whichTile_ + 10 < 80 &&  this.ai.whichTile_  !=  this.aiWhichRow * 9 + 8 ){
 			this.ai.x = this.floorTile[this.ai.whichTile_ + 10].x;
 			this.ai.y = this.floorTile[this.ai.whichTile_ + 10].y - this.floorTile[40].getRadius()*2;
 			this.ai.whichTile_ = this.ai.whichTile_ + 10;
 		}
 	}
-	*/
 };
+
 /**
  * @ start
  * */
