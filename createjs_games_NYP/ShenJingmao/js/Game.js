@@ -7,6 +7,7 @@ function Game(stage, imgContainer){
 	this.bg = new createjs.Bitmap(imgContainer["imgs/bg.jpg"]);
 	this.floorTile = [];
 	this.hiveCheck = [];
+	this.gameOver = false;
 	
 	//check cat path
 	this.catPathArray = [];
@@ -379,128 +380,145 @@ Game.prototype.onMouseClick = function(e) {
 	 * check whether it click before
 	 * else change the color of the tile
 	 * */
-	if( e.localY > 500 && e.localY < 1140){
+	if( e.localY > 500 && e.localY < 1140 && !this.gameOver){
 		var tempYValue = Math.floor((e.localY - 500) / 60) ;
 		for(var i = tempYValue *9; i <  tempYValue *9 + 9; i++ ){
 			if( Util.collision(this.floorTile[i].x + this.floorTile[i].getRadius() ,this.floorTile[i].y + this.floorTile[i].getRadius(), this.floorTile[i].getRadius() , e.localX ,e.localY) &&  !this.floorTile[i].click ){
 				
 				this.floorTile[i].changeColor();
-			}
-		}
-	}	
-	
-	//find the cat which row is on
-	this.aiWhichRow = Math.floor((this.ai.y + this.floorTile[40].getRadius()*2 - 500) / 60) ;
-	
-	this.hiveUpdate(this.ai.whichTile_);
-
-	/**
-	 * @ escape
-	 * */
-	if(this.outOfBound(this.ai.whichTile_)){
-		console.log("escape");
-	}
-	
-	/**
-	 * @ cat is trap OR Dead
-	 * */
-	if(!this.ai.isWeiZhu){
-	
-		this.pathCalculation = 0;
-		this.catPathArray.push( new Path(0) );
 		
-		this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'topleft');
-		this.resetMoveBack();
-		this.catPathArray.push( new Path() );
-		this.catPathAmount += 1;
-		this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'topright');
-		this.resetMoveBack();
-		this.catPathArray.push( new Path() );
-		this.catPathAmount += 1;
-		this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'left');
-		this.resetMoveBack();
-		this.catPathArray.push( new Path() );
-		this.catPathAmount += 1;
-		this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'right');
-		this.resetMoveBack();
-		this.catPathArray.push( new Path() );
-		this.catPathAmount += 1;
-		this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'botleft');
-		this.resetMoveBack();
-		this.catPathArray.push( new Path() );
-		this.catPathAmount += 1;
-		this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'botright');
-		this.resetMoveBack();
-		
-		this.pathCalculationCount = 0;
-		// find the correct path
-		for( var i = 1 ; i < this.catPathArray.length ; i ++){
-			for( var j = 0 ; j < this.catPathArray[i].value_.length ; j ++){
-
-				if(this.outOfBound(this.catPathArray[i].value_[this.catPathArray[i].value_.length-1])){
-					this.pathCalculationArray[this.pathCalculationCount].value_ += this.catPathArray[i].value_[j];
-					if( (j == this.catPathArray[i].value_.length-1) ){		
-						this.pathCalculationArray[this.pathCalculationCount].row_ = i;
-						this.pathCalculationArray[this.pathCalculationCount].alive = false;	
-						if( this.pathCalculationCount < 5){
-							this.pathCalculationCount += 1;
-						}
+				//find the cat which row is on
+				this.aiWhichRow = Math.floor((this.ai.y + this.floorTile[40].getRadius()*2 - 500) / 60) ;
+				
+				this.hiveUpdate(this.ai.whichTile_);				
+				
+				/**
+				 * @ escape OR dead
+				 * */
+				if(this.outOfBound(this.ai.whichTile_)){
+					this.gameOver = true;
+				}
+				if(!this.gameOver){
+					if(this.floorTile[this.hiveCheck[1].value_].click && this.floorTile[this.hiveCheck[2].value_].click && 
+					this.floorTile[this.hiveCheck[3].value_].click && this.floorTile[this.hiveCheck[4].value_].click &&
+					this.floorTile[this.hiveCheck[5].value_].click && this.floorTile[this.hiveCheck[6].value_].click){
+						this.gameOver = true;
 					}
 				}
-			}
-		}
-		this.smallestValue = 0;
-		// compare path
-		for( var i = 0 ; i < this.pathCalculationArray.length ; i ++){
-			if(!this.pathCalculationArray[i].alive){
-				this.getSmallerValue(this.pathCalculationArray[i].value_ );
-			}
-		}
-		
-		// decision to move
-		for( var i = 0 ; i < this.pathCalculationArray.length ; i ++){
-			if( this.smallestValue == this.pathCalculationArray[i].value_ ){
-				this.moveDecision(this.catPathArray[this.pathCalculationArray[i].row_].value_[1]);
-				break;
-			}
-		}
-		
-		// reset path
-		for( var i = 1 ; i < this.catPathArray.length ; i ++){
-			this.tempLength = this.catPathArray[i].value_.length;
-			for( var j = 0 ; j < this.tempLength ; j ++){
-				this.catPathArray[i].value_.pop();
-			}
-			this.catPathArray.pop();
-		}	
-		this.catPathAmount = 1;
-		
-		// reset calculation
-		for( var i = 0 ; i < this.pathCalculationArray.length ; i ++){
-			this.pathCalculationArray[i].value_ = 0;
-			this.pathCalculationArray[i].row_ = 0;
-			this.pathCalculationArray[i].alive = true;
-		}
+				
+				/**
+				 * @ cat is trap OR Dead
+				 * */
+				if(!this.ai.isWeiZhu && !this.gameOver){
+				
+					this.pathCalculation = 0;
+					this.catPathArray.push( new Path(0) );
+					
+					this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'topleft');
+					this.resetMoveBack();
+					this.catPathArray.push( new Path() );
+					this.catPathAmount += 1;
+					this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'topright');
+					this.resetMoveBack();
+					this.catPathArray.push( new Path() );
+					this.catPathAmount += 1;
+					this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'left');
+					this.resetMoveBack();
+					this.catPathArray.push( new Path() );
+					this.catPathAmount += 1;
+					this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'right');
+					this.resetMoveBack();
+					this.catPathArray.push( new Path() );
+					this.catPathAmount += 1;
+					this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'botleft');
+					this.resetMoveBack();
+					this.catPathArray.push( new Path() );
+					this.catPathAmount += 1;
+					this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'botright');
+					this.resetMoveBack();
+					
+					this.pathCalculationCount = 0;
+					// find the correct path
+					for( var i = 1 ; i < this.catPathArray.length ; i ++){
+						for( var j = 0 ; j < this.catPathArray[i].value_.length ; j ++){
+							if(this.outOfBound(this.catPathArray[i].value_[this.catPathArray[i].value_.length-1])){
+								this.pathCalculationArray[this.pathCalculationCount].value_ += this.catPathArray[i].value_[j];
+								if( (j == this.catPathArray[i].value_.length-1) ){		
+									this.pathCalculationArray[this.pathCalculationCount].row_ = i;
+									this.pathCalculationArray[this.pathCalculationCount].alive = false;	
+									if( this.pathCalculationCount < 5){
+										this.pathCalculationCount += 1;
+									}
+								}
+							}
+						}
+					}
+					this.smallestValue = 0;
+					// compare path
+					for( var i = 0 ; i < this.pathCalculationArray.length ; i ++){
+						if(!this.pathCalculationArray[i].alive){
+							this.getSmallerValue(this.pathCalculationArray[i].value_ );
+						}
+					}
+					
+					// decision to move
+					for( var i = 0 ; i < this.pathCalculationArray.length ; i ++){
+						if( this.smallestValue == this.pathCalculationArray[i].value_ ){
+							this.moveDecision(this.catPathArray[this.pathCalculationArray[i].row_].value_[1]);
+							break;
+						}
+					}
+					
+					// reset path
+					for( var i = 1 ; i < this.catPathArray.length ; i ++){
+						this.tempLength = this.catPathArray[i].value_.length;
+						for( var j = 0 ; j < this.tempLength ; j ++){
+							this.catPathArray[i].value_.pop();
+						}
+						this.catPathArray.pop();
+					}	
+					this.catPathAmount = 1;
+					
+					// reset calculation
+					for( var i = 0 ; i < this.pathCalculationArray.length ; i ++){
+						this.pathCalculationArray[i].value_ = 0;
+						this.pathCalculationArray[i].row_ = 0;
+						this.pathCalculationArray[i].alive = true;
+					}
+				
+				}else{
+					if(!this.gameOver){
+						if(!this.floorTile[this.hiveCheck[1].value_].click){
+							this.moveTopLeft();
+						}else if(!this.floorTile[this.hiveCheck[2].value_].click){
+							this.moveTopRight();
+						}else if(!this.floorTile[this.hiveCheck[3].value_].click){
+							this.moveLeft();
+						}else if(!this.floorTile[this.hiveCheck[4].value_].click){
+							this.moveRight();
+						}else if(!this.floorTile[this.hiveCheck[5].value_].click){
+							this.moveBottomLeft();
+						}else
+							this.moveBottomRight();
+					}
+				}
+				
+				/**
+				 * @ escape OR dead
+				 * */
+				if(this.outOfBound(this.ai.whichTile_)){
+					this.gameOver = true;
+				}
+				if(!this.gameOver){
+					if(this.floorTile[this.hiveCheck[1].value_].click && this.floorTile[this.hiveCheck[2].value_].click && 
+					this.floorTile[this.hiveCheck[3].value_].click && this.floorTile[this.hiveCheck[4].value_].click &&
+					this.floorTile[this.hiveCheck[5].value_].click && this.floorTile[this.hiveCheck[6].value_].click){
+						this.gameOver = true;
+					}
+				}
 	
-	}else{
-		if(this.floorTile[this.hiveCheck[1].value_].click && this.floorTile[this.hiveCheck[2].value_].click && 
-		this.floorTile[this.hiveCheck[3].value_].click && this.floorTile[this.hiveCheck[4].value_].click &&
-		this.floorTile[this.hiveCheck[5].value_].click && this.floorTile[this.hiveCheck[6].value_].click){
-			console.log("Dead Cat");
-		}else{
-			if(!this.floorTile[this.hiveCheck[1].value_].click){
-				this.moveTopLeft();
-			}else if(!this.floorTile[this.hiveCheck[2].value_].click){
-				this.moveTopRight();
-			}else if(!this.floorTile[this.hiveCheck[3].value_].click){
-				this.moveLeft();
-			}else if(!this.floorTile[this.hiveCheck[4].value_].click){
-				this.moveRight();
-			}else if(!this.floorTile[this.hiveCheck[5].value_].click){
-				this.moveBottomLeft();
-			}else
-				this.moveBottomRight();
 			}
+		}
 	}
 };
 
