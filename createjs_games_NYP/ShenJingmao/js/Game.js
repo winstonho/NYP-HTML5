@@ -13,7 +13,15 @@ function Game(stage, imgContainer){
 	this.catPathAmount = 1;
 	this.catPathArray.push( new Path() );
 	
-	//console.log("hi");
+	//calculation of shortest path
+	this.pathCalculationArray = [];
+	this.pathCalculationCount = 0;
+	for( var i = 0; i < 6; i ++){
+		this.pathCalculationArray.push(new Hive(0,0));
+	}
+	this.smallestValue = 0;
+	
+	//hive
 	for( var i = 0; i < 7; i ++){
 		this.hiveCheck.push(new Hive(0,0));
 	}
@@ -84,6 +92,12 @@ Game.prototype.restart = function(e) {
 	
 };
 
+/**
+ * @ hiveUpdate
+ * take the cat position and row
+ * set the value of hive depend on the row
+ * 0-origin 1-topleft 2-topright 3-left 4-right 5-botleft 6-botright
+ * */
 Game.prototype.hiveUpdate = function(pos){
 
 	if(this.aiWhichRow % 2 == 0){
@@ -103,6 +117,13 @@ Game.prototype.hiveUpdate = function(pos){
 	this.hiveCheck[4].value_ = pos+1;
 };
 
+
+/**
+ * @ outOfBound
+ * check whether the cat is escaped
+ * return ture if is escaped
+ * else return false
+ * */
 Game.prototype.outOfBound = function(number) {
 	if( number >= 0 && number <= 8){
 		return true;
@@ -124,6 +145,16 @@ Game.prototype.outOfBound = function(number) {
 	return false;
 };
 
+/**
+ * @ checkMovement
+ * recursion function to keep looping 
+ * return back when escaped
+ * check the row to decide how much to minus
+ * if the tile to move is colored OR move before OR already moved
+ * go to next function the order-(topleft, topright, left, right, botleft, botright)
+ * else set the tile has moved so we wont move back again
+ * push the tile into a array to keep track of the path
+ * */
 Game.prototype.topLeftCheck = function(number, row){
 	if(this.outOfBound(number)){
 		this.catPathArray[this.catPathAmount].value_.push(number);
@@ -221,6 +252,13 @@ Game.prototype.botLeftCheck = function(number, row){
 	}
 };
 
+/**
+ * @ checkMovement-continues
+ * when the recursion reach the botright
+ * the tile will be close if there no way to move
+ * a new path array will be created 
+ * and start from cat position again
+ * */
 Game.prototype.botRightCheck = function(number, row){
 	if(this.outOfBound(number)){
 		this.catPathArray[this.catPathAmount].value_.push(number);
@@ -262,18 +300,22 @@ Game.prototype.botRightCheck = function(number, row){
 	}
 };
 
+/**
+ * @ pathFinding
+ * the cat is trap
+ * when all 6 hive has closed
+ * */
 Game.prototype.pathFinding = function(number, row, dir){
 	
 	this.catAbleToMove = 0;
-	
-	//cat trapped
+
 	for( var i = 1; i < 7 ; i++){
 		if(this.floorTile[this.hiveCheck[i].value_].hasMovedClosed || this.floorTile[this.hiveCheck[i].value_].click){
 			this.catAbleToMove += 1;
 		}		
 	}
 	
-	if(this.catAbleToMove < 6){
+	if(this.catAbleToMove < 6 && !this.ai.isWeiZhu){
 		if(dir == 'topleft'){
 			this.pathCalculation += this.topLeftCheck(number, row);
 		}else if(dir == 'topright'){
@@ -299,10 +341,44 @@ Game.prototype.pathFinding = function(number, row, dir){
 };
 
 /**
+ * @ resetMoveBack
+ * */
+ Game.prototype.resetMoveBack = function() {
+	for(var i = 0; i < this.floorTile.length; i ++){
+		if( this.floorTile[i].hasMoved ){
+			 this.floorTile[i].hasMoved = false;
+		}
+		if( this.floorTile[i].hasMovedClosed ){
+			this.floorTile[i].hasMovedClosed = false;
+		}
+	}	
+ };
+ 
+ /**
+ * @ compare
+ * */
+ Game.prototype.getSmallerValue = function(value) {
+	if(this.smallestValue == 0){
+		this.smallestValue = value;
+	}
+	
+	if(value < this.smallestValue){
+		this.smallestValue = value;
+	}
+ };
+ 
+/**
  * @ onMouseClick
  * */
 Game.prototype.onMouseClick = function(e) {
 
+	/**
+	 * @ tile change color
+	 * check the range of all the tile
+	 * find the column array position 
+	 * check whether it click before
+	 * else change the color of the tile
+	 * */
 	if( e.localY > 500 && e.localY < 1140){
 		var tempYValue = Math.floor((e.localY - 500) / 60) ;
 		for(var i = tempYValue *9; i <  tempYValue *9 + 9; i++ ){
@@ -313,51 +389,98 @@ Game.prototype.onMouseClick = function(e) {
 		}
 	}	
 	
+	//find the cat which row is on
 	this.aiWhichRow = Math.floor((this.ai.y + this.floorTile[40].getRadius()*2 - 500) / 60) ;
 	
 	this.hiveUpdate(this.ai.whichTile_);
+
+	/**
+	 * @ escape
+	 * */
+	if(this.outOfBound(this.ai.whichTile_)){
+		console.log("escape");
+	}
 	
+	/**
+	 * @ cat is trap OR Dead
+	 * */
 	if(!this.ai.isWeiZhu){
 	
-	this.pathCalculation = 0;
-	this.catPathArray.push( new Path(0) );
-	
-	this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'topleft');
-	
-	//console.log(this.pathCalculation);
-	
-	// reset move back
-	for(var i = 0; i < this.floorTile.length; i ++){
-		if( this.floorTile[i].hasMoved ){
-			 this.floorTile[i].hasMoved = false;
-		}
-		if( this.floorTile[i].hasMovedClosed ){
-			this.floorTile[i].hasMovedClosed = false;
-		}
-	}
-	
-	//console.log("path");
-	this.checkPath = 0;
-	// find the correct path
-	for( var i = 0 ; i < this.catPathArray.length ; i ++){
-		for( var j = 0 ; j < this.catPathArray[i].value_.length ; j ++){
-			this.checkPath += this.catPathArray[i].value_[j]; 
-			//console.log(this.catPathArray[i].value_[j]);
-			if(this.checkPath == this.pathCalculation && (j == this.catPathArray[i].value_.length-1) ){	
-				this.moveDecision(this.catPathArray[i].value_[1]);
-				//console.log("moved");
+		this.pathCalculation = 0;
+		this.catPathArray.push( new Path(0) );
+		
+		this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'topleft');
+		this.resetMoveBack();
+		this.catPathArray.push( new Path() );
+		this.catPathAmount += 1;
+		this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'topright');
+		this.resetMoveBack();
+		this.catPathArray.push( new Path() );
+		this.catPathAmount += 1;
+		this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'left');
+		this.resetMoveBack();
+		this.catPathArray.push( new Path() );
+		this.catPathAmount += 1;
+		this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'right');
+		this.resetMoveBack();
+		this.catPathArray.push( new Path() );
+		this.catPathAmount += 1;
+		this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'botleft');
+		this.resetMoveBack();
+		this.catPathArray.push( new Path() );
+		this.catPathAmount += 1;
+		this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'botright');
+		this.resetMoveBack();
+		
+		this.pathCalculationCount = 0;
+		// find the correct path
+		for( var i = 1 ; i < this.catPathArray.length ; i ++){
+			for( var j = 0 ; j < this.catPathArray[i].value_.length ; j ++){
+
+				if(this.outOfBound(this.catPathArray[i].value_[this.catPathArray[i].value_.length-1])){
+					this.pathCalculationArray[this.pathCalculationCount].value_ += this.catPathArray[i].value_[j];
+					if( (j == this.catPathArray[i].value_.length-1) ){		
+						this.pathCalculationArray[this.pathCalculationCount].row_ = i;
+						this.pathCalculationArray[this.pathCalculationCount].alive = false;	
+						if( this.pathCalculationCount < 5){
+							this.pathCalculationCount += 1;
+						}
+					}
+				}
 			}
 		}
-	}
-	
-	// reset path
-	for( var i = 0 ; i < this.catPathArray.length ; i ++){
-		for( var j = 0 ; j < this.catPathArray[i].value_.length ; j ++){
-			this.catPathArray[i].value_.pop();
+		this.smallestValue = 0;
+		// compare path
+		for( var i = 0 ; i < this.pathCalculationArray.length ; i ++){
+			if(!this.pathCalculationArray[i].alive){
+				this.getSmallerValue(this.pathCalculationArray[i].value_ );
+			}
 		}
-		this.catPathArray.pop();
-	}
-	this.catPathAmount = 1;
+		
+		// decision to move
+		for( var i = 0 ; i < this.pathCalculationArray.length ; i ++){
+			if( this.smallestValue == this.pathCalculationArray[i].value_ ){
+				this.moveDecision(this.catPathArray[this.pathCalculationArray[i].row_].value_[1]);
+				break;
+			}
+		}
+		
+		// reset path
+		for( var i = 1 ; i < this.catPathArray.length ; i ++){
+			this.tempLength = this.catPathArray[i].value_.length;
+			for( var j = 0 ; j < this.tempLength ; j ++){
+				this.catPathArray[i].value_.pop();
+			}
+			this.catPathArray.pop();
+		}	
+		this.catPathAmount = 1;
+		
+		// reset calculation
+		for( var i = 0 ; i < this.pathCalculationArray.length ; i ++){
+			this.pathCalculationArray[i].value_ = 0;
+			this.pathCalculationArray[i].row_ = 0;
+			this.pathCalculationArray[i].alive = true;
+		}
 	
 	}else{
 		if(this.floorTile[this.hiveCheck[1].value_].click && this.floorTile[this.hiveCheck[2].value_].click && 
@@ -379,12 +502,15 @@ Game.prototype.onMouseClick = function(e) {
 				this.moveBottomRight();
 			}
 	}
-	
-	if(this.outOfBound(this.ai.whichTile_)){
-		console.log("escape");
-	}
 };
 
+/**
+ * @ moveDecision
+ * decide which direction to move
+ * base on the value pass in
+ * compare it with the cat position
+ * with the hive
+ * */
 Game.prototype.moveDecision = function(desination){
 	if(this.hiveCheck[1].value_ == desination){
 		this.moveTopLeft();
@@ -401,8 +527,13 @@ Game.prototype.moveDecision = function(desination){
 	}
 };
 
+/**
+ * @ movement
+ * find the cat at which row,
+ * decide how much to add or minus depend on row
+ * moveLeft() & moveRight() does not affected
+ * */
 Game.prototype.moveTopLeft = function(){
-	//topLeft
 	if(this.aiWhichRow % 2 == 0){
 		if(  this.ai.whichTile_ -10 > 0 && this.ai.whichTile_  !=  this.aiWhichRow * 9 ){
 			this.ai.x = this.floorTile[this.ai.whichTile_ -10].x;
@@ -420,7 +551,6 @@ Game.prototype.moveTopLeft = function(){
 };
 
 Game.prototype.moveTopRight = function(){
-	// top right
 	if(this.aiWhichRow % 2 == 0){
 		if(  this.ai.whichTile_ - 9 > 0 ){
 			this.ai.x = this.floorTile[this.ai.whichTile_ - 9].x;
@@ -438,7 +568,6 @@ Game.prototype.moveTopRight = function(){
 };
 
 Game.prototype.moveLeft = function(){
-	//left movement
 	if( this.ai.whichTile_ -1 >= this.aiWhichRow*9 ){
 		this.ai.x = this.floorTile[this.ai.whichTile_ -1].x;
 		this.ai.whichTile_ = this.ai.whichTile_ -1;
@@ -446,7 +575,6 @@ Game.prototype.moveLeft = function(){
 };
 
 Game.prototype.moveRight = function(){
-	//right movement
 	if( this.ai.whichTile_ + 1 <= this.aiWhichRow*9 + 8 ){
 		this.ai.x = this.floorTile[this.ai.whichTile_ +1].x;
 		this.ai.whichTile_ = this.ai.whichTile_ +1;
@@ -454,7 +582,6 @@ Game.prototype.moveRight = function(){
 };
 
 Game.prototype.moveBottomLeft = function(){
-	//left bottom
 	if(this.aiWhichRow % 2 == 0){
 		if(  this.ai.whichTile_ + 8 < 80 && this.ai.whichTile_  !=  this.aiWhichRow * 9 ){
 			this.ai.x = this.floorTile[this.ai.whichTile_ + 8].x;
@@ -472,7 +599,6 @@ Game.prototype.moveBottomLeft = function(){
 };
 
 Game.prototype.moveBottomRight = function(){
-	//right bottom
 	if(this.aiWhichRow % 2 == 0){
 		if(  this.ai.whichTile_ + 9 < 80  ){
 			this.ai.x = this.floorTile[this.ai.whichTile_ + 9].x;
