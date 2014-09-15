@@ -9,6 +9,11 @@ function Game(stage, imgContainer){
 	this.hiveCheck = [];
 	this.gameOver = false;
 	
+	this.hud = new HUD();
+	this.reply = new createjs.Bitmap(imgContainer["imgs/replay.png"])
+	this.reply.x = this.hud.x + 200;
+	this.reply.y = this.hud.y + 400;
+	
 	//check cat path
 	this.catPathArray = [];
 	this.catPathAmount = 1;
@@ -42,6 +47,7 @@ function Game(stage, imgContainer){
 		
 		this.tempY  += 60;
 	}
+	
 	this.numberOfColorTileAtStart =   Math.floor(Util.RandomRange(5,15));
 	
 	 for(var i = 0; i < this.numberOfColorTileAtStart; i++){
@@ -54,10 +60,10 @@ function Game(stage, imgContainer){
 		 }
 	 }
 	 
-	 
-	 var startTile = 40;
+	var startTile = 40;
 	this.ai = new AI(this.floorTile[startTile].x , this.floorTile[startTile].y - this.floorTile[startTile].getRadius()*2,  startTile);
-	this.stage_.addEventListener('mousedown', Delegate.create(this,this.onMouseClick));
+	this.stage_.addEventListener('click', Delegate.create(this,this.onMouseClick));
+	this.reset();
 
 };
 /**
@@ -80,17 +86,66 @@ Game.prototype.loadImage = function() {
 			this.stage_.addChild(this.floorTile[i]);
 		}
 		this.stage_.addChild(this.ai);
+		this.stage_.addChild(this.hud);
 };
 /**
  * @ reset
  * */
 Game.prototype.reset = function() {
+	
+	//reset floor tile
+	for(var  i = 0; i < 81; i++ ){
+		this.floorTile[i].reset();
+	}
+	
+	this.numberOfColorTileAtStart =   Math.floor(Util.RandomRange(5,15));
+	 for(var i = 0; i < this.numberOfColorTileAtStart; i++){
+		 this.temp =  Math.floor(Util.RandomRange(0,80));
+		 if( this.temp >= 36 &&  this.temp <= 44){
+			this.temp +=10;
+		 }
+		if(!this.floorTile[this.temp].click){
+			this.floorTile[this.temp].changeColor();
+		 }
+	 }
+	 
+	 //reset AI
+	var startTile = 40;
+	this.ai.x = this.floorTile[startTile].x 
+	this.ai.y = this.floorTile[startTile].y - this.floorTile[startTile].getRadius()*2
+	this.ai.whichTile_ = startTile;
+
+	// reset path
+	for( var i = 1 ; i < this.catPathArray.length ; i ++){
+		this.tempLength = this.catPathArray[i].value_.length;
+		for( var j = 0 ; j < this.tempLength ; j ++){
+			this.catPathArray[i].value_.pop();
+		}
+		this.catPathArray.pop();
+	}	
+	this.catPathAmount = 1;
+	
+	// reset calculation
+	for( var i = 0 ; i < this.pathCalculationArray.length ; i ++){
+		this.pathCalculationArray[i].value_ = 0;
+		this.pathCalculationArray[i].row_ = 0;
+		this.pathCalculationArray[i].alive = true;
+	}
+	
+	if(this.gameOver){
+		this.hud.addGameOver(false);
+	}
+	this.gameOver = false;
 };
 /**
  * @ restart
  * */
 Game.prototype.restart = function(e) {
-	
+	this.hud.addGameOver(false);
+	this.reply.removeEventListener('mousedown');
+	this.stage_.removeChild(this.reply);
+	this.stage_.addEventListener('click', Delegate.create(this,this.onMouseClick));
+	this.reset();
 };
 
 /**
@@ -397,6 +452,10 @@ Game.prototype.onMouseClick = function(e) {
 				 * */
 				if(this.outOfBound(this.ai.whichTile_)){
 					this.gameOver = true;
+					this.hud.addGameOver(true);
+					this.stage_.addChild(this.reply);
+					this.stage_.removeEventListener('click');
+					this.reply.addEventListener('mousedown', Delegate.create(this,this.restart));
 				}
 				if(!this.gameOver){
 					if(this.floorTile[this.hiveCheck[1].value_].click && this.floorTile[this.hiveCheck[2].value_].click && 
@@ -438,6 +497,7 @@ Game.prototype.onMouseClick = function(e) {
 					this.resetMoveBack();
 					
 					this.pathCalculationCount = 0;
+					
 					// find the correct path
 					for( var i = 1 ; i < this.catPathArray.length ; i ++){
 						for( var j = 0 ; j < this.catPathArray[i].value_.length ; j ++){
@@ -464,6 +524,7 @@ Game.prototype.onMouseClick = function(e) {
 					// decision to move
 					for( var i = 0 ; i < this.pathCalculationArray.length ; i ++){
 						if( this.smallestValue == this.pathCalculationArray[i].value_ ){
+							console.log(this.catPathArray[this.pathCalculationArray[i].row_].value_[1] );
 							this.moveDecision(this.catPathArray[this.pathCalculationArray[i].row_].value_[1]);
 							break;
 						}
@@ -503,20 +564,6 @@ Game.prototype.onMouseClick = function(e) {
 					}
 				}
 				
-				/**
-				 * @ escape OR dead
-				 * */
-				if(this.outOfBound(this.ai.whichTile_)){
-					this.gameOver = true;
-				}
-				if(!this.gameOver){
-					if(this.floorTile[this.hiveCheck[1].value_].click && this.floorTile[this.hiveCheck[2].value_].click && 
-					this.floorTile[this.hiveCheck[3].value_].click && this.floorTile[this.hiveCheck[4].value_].click &&
-					this.floorTile[this.hiveCheck[5].value_].click && this.floorTile[this.hiveCheck[6].value_].click){
-						this.gameOver = true;
-					}
-				}
-	
 			}
 		}
 	}

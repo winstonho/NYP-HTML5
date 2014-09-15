@@ -50,3 +50,9 @@ Circle.prototype.changeColor = function()
 	this.click  = true;
 	this.addChild(this.creepImg1_);
 }
+
+Circle.prototype.reset = function()
+{
+	this.click  = false;
+	this.removeChild(this.creepImg1_);
+}

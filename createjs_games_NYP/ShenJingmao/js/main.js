@@ -26,7 +26,10 @@ function loadingStart(){
 		'imgs/pot1.png',
 		'imgs/pot2.png',
 		'imgs/stay.png',
-		'imgs/weizhu.png'
+		'imgs/weizhu.png',
+		'imgs/failed.png',
+		'imgs/victory.png',
+		'imgs/replay.png'	
     ], imgContainer, stretcher);
     preloaderApp.addEventListener(Event.COMPLETE, assetsLoaded);
 
