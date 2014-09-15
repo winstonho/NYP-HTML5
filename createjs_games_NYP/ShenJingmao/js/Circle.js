@@ -27,15 +27,15 @@ function Circle(x,y ,value) {
 	this.creepImg1_.scaleY = 1.3;
 	this.click = false;
 	this.hasMoved = false;
-	this.hasMovedClosed = false;
     this.addChild(this.creepImg_);
 	
 	this.value_ = value;
 	
-	this.valueText = new createjs.Text( this.value_, "20pt Calibri" ,"Black"); 
-	this.valueText.x = 20;
-	this.valueText.y= 20;
-	this.addChild(this.valueText);
+	// for debug 
+	//this.valueText = new createjs.Text( this.value_, "20pt Calibri" ,"Black"); 
+	//this.valueText.x = 20;
+	//this.valueText.y= 20;
+	//this.addChild(this.valueText);
 	
 	this.x = x;
 	this.y = y;

@@ -39,7 +39,7 @@ function HUD() {
 	
 	this.moveNumberText = new createjs.Text( "you use :", "20pt Calibri" ,"Black"); 
 	this.moveNumberText.x = 200;
-	this.moveNumberText.y = 200;
+	this.moveNumberText.y = 220;
 	
 	
 	//this.addChild(this.LevelText);
@@ -54,12 +54,15 @@ HUD.prototype.addGameOver = function(isGameOver)
 		this.addChild(this.gameOver);
 		this.addChild(this.share);
 		this.addChild(this.more);
+		this.moveNumberText.text = "Try again" ;
+		this.addChild(this.moveNumberText);
 		
 	}
 	else{
 		this.removeChild(this.gameOver);
 		this.removeChild(this.share);
 		this.removeChild(this.more);
+		this.removeChild(this.moveNumberText);
 	}
 }
 
