@@ -8,11 +8,20 @@ function Game(stage, imgContainer){
 	this.floorTile = [];
 	this.hiveCheck = [];
 	this.gameOver = false;
+	this.isWin = false;
+	this.isMainMenu = true;
+	this.mainMenu = new createjs.Bitmap(imgContainer["imgs/btn_start.png"]);
+	this.mainMenu.scaleX = 1.65;
+	this.mainMenu.scaleY = 1.65;
+	this.mainMenu.y = 130;
+	this.numberOfMove = 0;
 	
 	this.hud = new HUD();
-	this.reply = new createjs.Bitmap(imgContainer["imgs/replay.png"])
-	this.reply.x = this.hud.x + 200;
-	this.reply.y = this.hud.y + 400;
+	this.reply = new createjs.Bitmap(imgContainer["imgs/replay.png"]);
+	this.reply.scaleX = this.hud.gameOver.scaleX;
+	this.reply.scaleY = this.hud.gameOver.scaleY;
+	this.reply.x = this.hud.x + 340;
+	this.reply.y = this.hud.y + 500;
 	
 	//check cat path
 	this.catPathArray = [];
@@ -62,14 +71,18 @@ function Game(stage, imgContainer){
 	 
 	var startTile = 40;
 	this.ai = new AI(this.floorTile[startTile].x , this.floorTile[startTile].y - this.floorTile[startTile].getRadius()*2,  startTile);
-	this.stage_.addEventListener('click', Delegate.create(this,this.onMouseClick));
+	this.mainMenu.addEventListener('mousedown', Delegate.create(this,this.startGame));
 	this.reset();
 
 };
 /**
  * @ tick
  * */
-Game.prototype.tick = function(event) {
+Game.prototype.startGame = function(e) {
+	this.isMainMenu = false;
+	this.stage_.removeChild(this.mainMenu);
+	this.mainMenu.removeEventListener('mouseDown');
+	this.stage_.addEventListener('click', Delegate.create(this,this.onMouseClick));
 };
 /**
  * @ checkGameOver
@@ -87,6 +100,7 @@ Game.prototype.loadImage = function() {
 		}
 		this.stage_.addChild(this.ai);
 		this.stage_.addChild(this.hud);
+		this.stage_.addChild(this.mainMenu);
 };
 /**
  * @ reset
@@ -111,9 +125,11 @@ Game.prototype.reset = function() {
 	 
 	 //reset AI
 	var startTile = 40;
-	this.ai.x = this.floorTile[startTile].x 
-	this.ai.y = this.floorTile[startTile].y - this.floorTile[startTile].getRadius()*2
+	this.ai.x = this.floorTile[startTile].x ;
+	this.ai.y = this.floorTile[startTile].y - this.floorTile[startTile].getRadius()*2;
 	this.ai.whichTile_ = startTile;
+	this.ai.isWeiZhu = false;
+	this.ai.changeAnimation();
 
 	// reset path
 	for( var i = 1 ; i < this.catPathArray.length ; i ++){
@@ -135,7 +151,12 @@ Game.prototype.reset = function() {
 	if(this.gameOver){
 		this.hud.addGameOver(false);
 	}
+	if(this.isWin){
+		this.hud.addWining(false , 0);
+	}
 	this.gameOver = false;
+	this.isWin = false;
+	this.numberOfMove = 0;
 };
 /**
  * @ restart
@@ -373,27 +394,24 @@ Game.prototype.pathFinding = function(number, row, dir){
 	
 	if(this.catAbleToMove < 6 && !this.ai.isWeiZhu){
 		if(dir == 'topleft'){
-			this.pathCalculation += this.topLeftCheck(number, row);
+			this.topLeftCheck(number, row);
 		}else if(dir == 'topright'){
-			this.pathCalculation += this.topRightCheck(number, row);
+			this.topRightCheck(number, row);
 		}else if(dir == 'left'){
-			this.pathCalculation += this.leftCheck(number, row);
+			this.leftCheck(number, row);
 		}else if(dir == 'right'){
-			this.pathCalculation += this.rightCheck(number, row);
+			this.rightCheck(number, row);
 		}else if(dir == 'botleft'){
-			this.pathCalculation += this.botLeftCheck(number, row);
+			this.botLeftCheck(number, row);
 		}else if(dir == 'botright'){
-			this.pathCalculation += this.botRightCheck(number, row);
+		   this.botRightCheck(number, row);
 		}		
-		return this.pathCalculation;
 	}else{
 		if(!this.ai.isWeiZhu){
 			this.ai.isWeiZhu = true;
 			this.ai.changeAnimation();
 		}
-		return this.pathCalculation;
 	}
-	
 };
 
 /**
@@ -427,7 +445,6 @@ Game.prototype.pathFinding = function(number, row, dir){
  * @ onMouseClick
  * */
 Game.prototype.onMouseClick = function(e) {
-
 	/**
 	 * @ tile change color
 	 * check the range of all the tile
@@ -435,11 +452,11 @@ Game.prototype.onMouseClick = function(e) {
 	 * check whether it click before
 	 * else change the color of the tile
 	 * */
-	if( e.localY > 500 && e.localY < 1140 && !this.gameOver){
+	if( e.localY > 500 && e.localY < 1140 && !this.gameOver && !this.isMainMenu && !this.isWin){
 		var tempYValue = Math.floor((e.localY - 500) / 60) ;
 		for(var i = tempYValue *9; i <  tempYValue *9 + 9; i++ ){
 			if( Util.collision(this.floorTile[i].x + this.floorTile[i].getRadius() ,this.floorTile[i].y + this.floorTile[i].getRadius(), this.floorTile[i].getRadius() , e.localX ,e.localY) &&  !this.floorTile[i].click ){
-				
+				this.numberOfMove +=1;
 				this.floorTile[i].changeColor();
 		
 				//find the cat which row is on
@@ -457,11 +474,15 @@ Game.prototype.onMouseClick = function(e) {
 					this.stage_.removeEventListener('click');
 					this.reply.addEventListener('mousedown', Delegate.create(this,this.restart));
 				}
-				if(!this.gameOver){
+				if(!this.isWin){
 					if(this.floorTile[this.hiveCheck[1].value_].click && this.floorTile[this.hiveCheck[2].value_].click && 
 					this.floorTile[this.hiveCheck[3].value_].click && this.floorTile[this.hiveCheck[4].value_].click &&
 					this.floorTile[this.hiveCheck[5].value_].click && this.floorTile[this.hiveCheck[6].value_].click){
-						this.gameOver = true;
+						this.isWin = true;
+						this.hud.addWining(true , this.numberOfMove);
+						this.stage_.addChild(this.reply);
+						this.stage_.removeEventListener('click');
+						this.reply.addEventListener('mousedown', Delegate.create(this,this.restart));
 					}
 				}
 				
@@ -470,7 +491,6 @@ Game.prototype.onMouseClick = function(e) {
 				 * */
 				if(!this.ai.isWeiZhu && !this.gameOver){
 				
-					this.pathCalculation = 0;
 					this.catPathArray.push( new Path(0) );
 					
 					this.pathFinding(this.ai.whichTile_,this.aiWhichRow, 'topleft');
@@ -520,11 +540,10 @@ Game.prototype.onMouseClick = function(e) {
 							this.getSmallerValue(this.pathCalculationArray[i].value_ );
 						}
 					}
-					
 					// decision to move
 					for( var i = 0 ; i < this.pathCalculationArray.length ; i ++){
 						if( this.smallestValue == this.pathCalculationArray[i].value_ ){
-							console.log(this.catPathArray[this.pathCalculationArray[i].row_].value_[1] );
+						
 							this.moveDecision(this.catPathArray[this.pathCalculationArray[i].row_].value_[1]);
 							break;
 						}
@@ -688,5 +707,5 @@ Game.prototype.start = function() {
   
 	this.loadImage();
     //this is the proper way of monitoring system tick in createjs
-	createjs.Ticker.addEventListener('tick', Delegate.create(this,this.tick));
+	//createjs.Ticker.addEventListener('tick', Delegate.create(this,this.tick));
 };
