@@ -20,6 +20,11 @@ function Game(stage, imgContainer){
 	this.fireBall.push ( new FireBall(0,0) );
 	this.fireBall.push ( new FireBall(0,0) );
 	
+	this.fireEffect = [];
+	this.fireEffect.push ( new FireEffect(0,0, "fireball") );
+	this.fireEffect.push ( new FireEffect(0,0, "fireball") );
+	this.fireEffect.push ( new FireEffect(100,100, "firework") );
+	
 	this.timeCountDown = 400;
 	this.scoreCount = 0;
 	this.coinCount = 0;
@@ -78,6 +83,12 @@ Game.prototype.keyBoardUp = function(e) {
 		}
 	}
 	
+	if(this.keyBoard.getKeyPressThroughtName("w")){
+		this.fireEffect[2].setVisibleTrue();
+		this.fireEffect[2].play();
+		this.fireEffect[2].setViewPos(150,150);
+	}
+	
 	this.keyBoard.setKeyPress(e.keyCode,false);
 };
 /**
@@ -98,7 +109,7 @@ Game.prototype.tick = function(e) {
 	this.hud.update(this.timeCountDown, this.scoreCount, this.coinCount);
 	
 	for( var i = 0; i < this.fireBall.length ; i++){
-		if(this.fireBall[i].getAlive()){
+		if(this.fireBall[i].getVisible()){
 	
 			var checkFireBallCollide = false;
 			if(this.fireBall[i].currentSide == "Left"){
@@ -110,13 +121,14 @@ Game.prototype.tick = function(e) {
 			}
 						
 			if(checkFireBallCollide){
-				this.fireBall[i].setToBomb();
+				this.fireBall[i].setVisibleFalse();
+				this.fireEffect[i].setVisibleTrue();
+				this.fireEffect[i].setViewPos(this.fireBall[i].x, this.fireBall[i].y);
+				this.fireEffect[i].play();
 			}
 			
-			if(this.fireBall[i].state != "bomb"){
-				if(this.CheckWalkableUpDown(-1,this.fireBall[i])){
+			if(this.CheckWalkableUpDown(-1,this.fireBall[i])){
 					this.fireBall[i].setToBounce();
-				}
 			}
 				
 			this.fireBall[i].update((e.delta/200));
@@ -125,7 +137,10 @@ Game.prototype.tick = function(e) {
 						if(  this.monster[j].x < this.stage_.dWidth_ + this.monster[j].getWidth() && this.monster[j].x > -this.monster[j].getWidth() && this.monster[j].alive ){
 							if(Util.boxCollision(this.fireBall[i].x, this.fireBall[i].y, this.fireBall[i].getWidth() * 0.5 , this.fireBall[i].getHeight() * 0.5,
 								this.monster[j].x, this.monster[j].y, this.monster[j].getWidth() * 0.5, this.monster[j].getHeight() * 0.5)){
-								this.fireBall[i].setToBomb();
+								this.fireBall[i].setVisibleFalse();
+								this.fireEffect[i].setVisibleTrue();
+								this.fireEffect[i].setViewPos(this.fireBall[i].x, this.fireBall[i].y);
+								this.fireEffect[i].play();
 								this.monster[j].dead(2);
 								this.scoreCount += 100;
 								createjs.Sound.play("kick");
@@ -135,9 +150,13 @@ Game.prototype.tick = function(e) {
 		}
 		
 		if( this.fireBall[i].x < 0 || this.fireBall[i].x > this.stage_.dWidth_){
-			this.fireBall[i].setAliveFalse();
+			this.fireBall[i].setVisibleFalse();
 		}
 		
+	}
+	
+	for( var i = 0; i < this.fireEffect.length ; i++){
+		this.fireEffect[i].update();
 	}
 	
 	if(this.keyBoard.getKeyPressThroughtName(" ") && !this.mario.jumping && this.mario.alive){
@@ -166,7 +185,7 @@ Game.prototype.tick = function(e) {
 					this.monster[i].x  -= 3;
 				}
 				for( var i = 0; i < this.fireBall.length ; i++){
-					this.fireBall[i].x -=3;
+					this.fireEffect[i].x -=3;
 				}
 			}
 		}
@@ -182,7 +201,7 @@ Game.prototype.tick = function(e) {
 					this.monster[i].x  += 3;
 				}
 				for( var i = 0; i < this.fireBall.length ; i++){
-					this.fireBall[i].x +=3;
+					this.fireEffect[i].x +=3;
 				}
 			}
 		}
@@ -393,6 +412,10 @@ Game.prototype.loadImage = function() {
 		this.stage_.addChild(this.bg);
 		this.stage_.addChild(this.mapView);
 		this.stage_.addChild(this.mario);
+	
+		for( var i=0; i < this.fireEffect.length ; i++){
+			this.stage_.addChild(this.fireEffect[i]);
+		}
 	
 		for( var i=0; i < this.fireBall.length ; i++){
 			this.stage_.addChild(this.fireBall[i]);
