@@ -24,28 +24,12 @@ function FireBall(x,y) {
 		}
 	};
 	
-	this.fireBallEffectData = {
-		// image to use
-		framerate : 5,
-		images    : [imgContainer["imgs/fireballeffect.png"]], 
-		// width, height & registration point of each sprite
-		frames    : {width: 16, height: 16, regX: 8, regY: 8 },
-		animations: {  
-			fire: {
-				frames: [0, 1, 2],
-				speed : 0.5,
-			}
-		}
-	};
 	this.fireBallSpriteSheet = new createjs.SpriteSheet(this.fireBallData);
-	this.fireBallEffectSpriteSheet = new createjs.SpriteSheet(this.fireBallEffectData);
 	
 	this.fireBallAnimation = new createjs.Sprite(this.fireBallSpriteSheet);
-	this.fireBallEffectAnimation = new createjs.Sprite(this.fireBallEffectSpriteSheet);
 	
 	// able to  reverse the sprite
 	createjs.SpriteSheetUtils.addFlippedFrames(this.fireBallSpriteSheet, true, false, false);
-	createjs.SpriteSheetUtils.addFlippedFrames(this.fireBallEffectSpriteSheet, true, false, false);
 	
 	this.currentAnimation = "fire";
 	this.fireBallAnimation.gotoAndPlay(this.currentAnimation);	
@@ -65,9 +49,6 @@ function FireBall(x,y) {
 	
 	this.visible = false;
 	this.addChild(this.fireBallAnimation);
-	
-	this.fireBallEffectAnimation.visible = false;
-	this.addChild(this.fireBallEffectAnimation);
 	
 	this.x = x;
 	this.y = y;
@@ -102,17 +83,15 @@ FireBall.prototype.reset = function(){
 	this.setToBounce();
 	
 	this.fireBallAnimation.visible = false;
-	this.fireBallEffectAnimation.visible = false;
 	
 };
- 
+
 /**
 * @ shoot
 * also act as reset
 * */
 FireBall.prototype.shoot = function( marioClone ){
 	this.fireBallAnimation.visible = true;
-	this.fireBallEffectAnimation.visible = false;
 	this.visible = true;
 	this.deltaTime = 0;
 	this.x = marioClone.x-4;
@@ -126,13 +105,12 @@ FireBall.prototype.shoot = function( marioClone ){
 	}
 	
 };
-
  
-FireBall.prototype.getAlive = function(){
+FireBall.prototype.getVisible = function(){
 	return this.visible;
 };
 
-FireBall.prototype.setAliveFalse = function(){
+FireBall.prototype.setVisibleFalse = function(){
 	this.visible = false;
 };
   
@@ -145,20 +123,9 @@ FireBall.prototype.getWidth = function(){
 };
  
 FireBall.prototype.setToBounce = function(){
-	if(this.state !=  "bomb"){
-		this.state = "bounce";
-		this.deltaTime = 0;
-		this.updateY = this.y;
-	}
-};
-
-FireBall.prototype.setToBomb = function(){
-	if(this.state != "bomb"){
-		this.state = "bomb";
-		this.fireBallEffectAnimation.visible = true;
-		this.fireBallAnimation.visible = false;
-		this.fireBallEffectAnimation.gotoAndPlay(this.currentAnimation);
-	}
+	this.state = "bounce";
+	this.deltaTime = 0;
+	this.updateY = this.y;
 };
  
 /**
@@ -197,11 +164,5 @@ FireBall.prototype.update = function(deltaTime){
 	
 	if(	this.state == "bounce" ){	
 		this.bounce( deltaTime );
-	}
-	
-	if( this.state == "bomb" ){
-		if(this.fireBallEffectAnimation.currentFrame == 2){
-			this.visible = false;
-		}	
 	}
 };
