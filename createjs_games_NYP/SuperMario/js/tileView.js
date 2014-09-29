@@ -19,6 +19,7 @@ function TileView (x,y,image,type){
 	this.MoveY = 2;
 	this.isMove =  false;
 	this.tempY = 0.5;
+	this.isDestory = false;
 }
 
 TileView.prototype.reset = function(){
@@ -27,10 +28,11 @@ TileView.prototype.reset = function(){
 	this.tempY = 0.5;
 	this.orginalY = y;
 	this.orginalX = x;
+	this.visible = false;
+	this.isDestory = false;
 };
 
 TileView.prototype.move = function(){
-    //TODO: if(this.isMove) is sufficient for this
 	if(this.isMove){
 	
 		if(this.MoveY < 0){
@@ -45,6 +47,10 @@ TileView.prototype.move = function(){
 			this.tempY = 0.5;
 			this.y = this.orginalY;
 		}
-		
 	}
+};
+
+TileView.prototype.destory = function(){
+	this.visible = false;
+	this.isDestory = true;
 };

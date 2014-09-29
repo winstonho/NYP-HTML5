@@ -46,7 +46,12 @@ function HUD() {
 	this.GameOverText.y = 100;
 	this.GameOverText.visible = false;
 	
-	this.resetText = new createjs.Text( "Press r to reset", "20pt Calibri" ,"White"); 
+	this.winText = new createjs.Text( "You Win", "40pt Calibri" ,"White"); 
+	this.winText.x = 120;
+	this.winText.y = 100;
+	this.winText.visible = false;
+	
+	this.resetText = new createjs.Text( "Press r to replay", "20pt Calibri" ,"White"); 
 	this.resetText.x = 120;
 	this.resetText.y = 150;
 	this.resetText.visible = false;
@@ -83,6 +88,7 @@ function HUD() {
 	this.addChild(this.coinText);
 	this.addChild(this.timerText);
 	this.addChild(this.GameOverText);
+	this.addChild(this.winText);
 	this.addChild(this.resetText);
 	
 	this.world(1);
@@ -149,8 +155,14 @@ HUD.prototype.ShowGameOver = function(){
 	this.resetText.visible = true;
 };
 
+HUD.prototype.ShowWin = function(){
+	this.winText.visible = true;
+	this.resetText.visible = true;
+};
+
 HUD.prototype.reset = function(){
 	this.GameOverText.visible = false;
 	this.resetText.visible = false;
+	this.winText.visible = false;
 };
 

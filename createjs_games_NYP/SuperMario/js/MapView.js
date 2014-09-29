@@ -23,6 +23,7 @@ function MapView(x,y , MapModule , bgWidth) {
 	this.bgWidth_ = bgWidth;
 	 
 	this.firstLevel = MapModule.getMapData();
+	this.orginalLevel = Util.deepCopy(this.firstLevel);
 	
 	
 	this.mapWidth =  MapModule.mapWidth;
@@ -122,8 +123,17 @@ MapView.prototype.update = function() {
 	}
 };
 
+MapView.prototype.destoryTile = function(row, col) {
+			this.tileClone[row][col].destory();
+			this.firstLevel[row][col] = -1;
+			console.log(this.firstLevel[row][col]);
+};
+
+
 MapView.prototype.reset = function() {
-  for (var row = 0; row < this.mapHeight; row++) {
+ 
+ this.firstLevel = Util.deepCopy(this.orginalLevel);
+ for (var row = 0; row < this.mapHeight; row++) {
 	for (var col = 0 ; col < this.mapWidth ; col++) {
 			this.tileClone[row][col].reset;
 		}
@@ -133,6 +143,7 @@ MapView.prototype.reset = function() {
 	
 	for (var row = 0; row < this.mapHeight; row++) {
 				for (var col = 0; col < this.mapWidth; col++) {
+					
 					if(this.firstLevel[row][col] > -1){
 						if( this.tileClone[row][col].x + this.x > this.bgWidth_ + this.tileSheet.frames.width || this.tileClone[row][col].x  + this.x < - this.tileSheet.frames.width ){
 							this.tileClone[row][col].visible = false;

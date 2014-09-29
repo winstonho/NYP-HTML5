@@ -18,7 +18,7 @@ function MapModule(mapRow , mapCol){
 	
 	this.buildLevelOne();
 	
-	this.walkableTile = [-1 ,272 ,274,273 ,307,306,305, 375,379 ];
+	this.walkableTile = [-1,11,12,13,14,44,45,46 ,272 ,274,273 ,307,306,305, 375,379 ];
 	
 	this.orginalLevel = this.firstLevel;
 	
@@ -74,6 +74,7 @@ MapModule.prototype.buildLevelOne =  function (){
 	
 	this.firstLevel[this.mapHeight -3][190] = 33;
 	
+	//castle
 	for(var i = this.mapHeight -13;i< this.mapHeight -3; i++){	
 		this.firstLevel[i][190] = 379;
 	}
@@ -289,7 +290,7 @@ MapModule.prototype.createVPiple =  function (startX , startY , height ){
 	
 };
 MapModule.prototype.getMapData =  function (){
-	return this.firstLevel;
+	return this.firstLevel.slice(0);
 };
 
 MapModule.prototype.walkable =  function (row, col) {
