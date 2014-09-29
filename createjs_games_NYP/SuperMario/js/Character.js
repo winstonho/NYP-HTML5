@@ -126,6 +126,7 @@ BOK.inherits(Character, createjs.Container);
 	
 	this.alive = true;
 	this.gameOver = false;
+	this.win = false;
 }
 
 
@@ -158,6 +159,9 @@ Character.prototype.reset = function(){
 	
 	this.alive = true;
 	this.gameOver = false;
+	this.win = false;
+	this.visible = true;
+	
 	
 };
 
@@ -350,6 +354,16 @@ Character.prototype.update = function(deltaTime){
 			if(this.invisibleTime < 0){
 				this.setAlpha(1);
 				this.invisibleTime = 2;
+			}
+		}
+		if(this.win){
+			if(this.x < 340){
+				this.moveRight();
+				this.currentSide = "Right";
+				this.walkRightAnimation();
+			}
+			else{
+				this.visible = false;
 			}
 		}
 };

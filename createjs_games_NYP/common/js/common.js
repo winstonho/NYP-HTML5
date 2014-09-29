@@ -35,3 +35,16 @@ Util.RandomRange = function (min,max){
 		||( x > x1 && x-w < x1+w1 && ( (y < y1+h1  && y+h > y1) || (y+h < y1+h1  && y+h > y1 -h1) )) );
 	
  };
+ 
+Util.deepCopy = function(arr) {
+    var out = [];
+    for (var i = 0, len = arr.length; i < len; i++) {
+        var item = arr[i];
+        var obj = {};
+        for (var k in item) {
+            obj[k] = item[k];
+        }
+        out.push(obj);
+    }
+    return out;
+}

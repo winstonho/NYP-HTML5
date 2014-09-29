@@ -26,7 +26,8 @@ function Game(stage, imgContainer){
 	this.musicChange = false;
 	
 	this.monster = [];
-	this.monster.push( new Monster(340,220, "mushroom") );
+	
+	this.monster.push( new Monster(340,220, "mushroomd") );
 	this.monster.push( new Monster(500,280, "mushroom") );
 	this.monster.push( new Monster(650,280, "mushroom") );
 	this.monster.push( new Monster(680,280, "mushroom") );
@@ -42,8 +43,12 @@ function Game(stage, imgContainer){
 	this.monster.push( new Monster(2400,280, "mushroom") );
 	this.monster.push( new Monster(2600,280, "mushroom") );
 	
+	
+	
 	document.addEventListener("keydown", Delegate.create(this,this.keyBoardDown));
     document.addEventListener("keyup", Delegate.create(this,this.keyBoardUp));
+	
+	
 };
 /**
  * @ keyBoardDown
@@ -145,11 +150,11 @@ Game.prototype.tick = function(e) {
 		}
 	}
 
-	if(this.keyBoard.getKeyPressThroughtName("r") && this.mario.gameOver){
+	if(this.keyBoard.getKeyPressThroughtName("r") && (this.mario.gameOver || this.mario.win)){
 		this.reset();
 	}	
 	
-	if(this.keyBoard.getKeyPressThroughtName("d") && !this.CheckWalkableLeftRight(1,this.mario) && this.mario.alive){	
+	if(this.keyBoard.getKeyPressThroughtName("d") && !this.CheckWalkableLeftRight(1,this.mario) && this.mario.alive && !this.mario.win){	
 		this.mario.moveRight();
 		if(!this.mario.jumping){
 			this.mario.walkRightAnimation();
@@ -165,7 +170,7 @@ Game.prototype.tick = function(e) {
 				}
 			}
 		}
-	} else if(this.keyBoard.getKeyPressThroughtName("a") && !this.CheckWalkableLeftRight(-1,this.mario) && this.mario.alive){
+	} else if(this.keyBoard.getKeyPressThroughtName("a") && !this.CheckWalkableLeftRight(-1,this.mario) && this.mario.alive && !this.mario.win){
 		this.mario.moveLeft();
 		if(!this.mario.jumping){
 			this.mario.walkLeftAnimation();
@@ -181,7 +186,7 @@ Game.prototype.tick = function(e) {
 				}
 			}
 		}
-	}else if(!this.mario.jumping && this.mario.alive){
+	}else if(!this.mario.jumping && this.mario.alive && !this.mario.win){
 		if(this.mario.currentSide == "Left"){
 			this.mario.idleLeftAnimation();
 		}else{
@@ -219,12 +224,19 @@ Game.prototype.tick = function(e) {
 	
 	this.mapView.update();
 	
-	if(this.mario.gameOver){
+	if(this.mario.gameOver && !this.mario.win){
 		this.hud.ShowGameOver();
 	}
 	
+	if(this.getMarioTileIDAt(false,true) == 1 && this.mario.size != "small"){
+		var row = Math.floor((this.mario.y) / this.mapView.tileSheet.frames.height);
+		var col = Math.floor(((this.mario.x ) - this.mapView.x) / this.mapView.tileSheet.frames.width );
+		this.mapView.destoryTile(row-1,col);
+	}
+	
 	if(this.getMarioTileIDAt(true,false) == 379 || this.getMarioTileIDAt(true,false) == 36){
-		this.hud.ShowGameOver();
+		this.mario.win = true;
+		this.hud.ShowWin();
 	}
 	
 
@@ -308,12 +320,10 @@ Game.prototype.getMarioTileIDAt = function( xDirection , yDirection ) {
 	
 	if (xDirection) { // left
 		
-		if(this.mario.currentSide == "Left"){
-			formulaB = Math.floor(((this.mario.x - this.mario.getWidth() * 0.5 ) - this.mapView.x) / this.mapView.tileSheet.frames.width );
-		}
-		else{
-			formulaB = Math.floor(((this.mario.x + this.mario.getWidth() * 0.5) - this.mapView.x ) / this.mapView.tileSheet.frames.width);
-		}
+		
+		formulaB = Math.floor((this.mario.x  - this.mapView.x) / this.mapView.tileSheet.frames.width );
+		
+		
 		return this.mapModule.getID(formulaC,formulaB);
 		
 	} else if (yDirection) { // right
@@ -397,7 +407,7 @@ Game.prototype.loadImage = function() {
  * @ reset
  * */
 Game.prototype.reset = function() {
-	this.mapView.reset();
+	
 	this.mario.reset();
 	this.timeCountDown = 400;
 	this.scoreCount = 0;
@@ -411,6 +421,7 @@ Game.prototype.reset = function() {
 	}
 	this.keyBoard.reset();
 	this.hud.reset();
+	this.mapView.reset();
 };
 /**
  * @ start
